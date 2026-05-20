@@ -92,6 +92,19 @@ textarea { resize: none; min-height: 72px; line-height: 1.6; }
 .action-btn:hover { background: var(--surface2); }
 .action-btn.danger { color: #A32D2D; border-color: #F09595; }
 .empty { text-align: center; padding: 2.5rem 1rem; color: var(--text3); font-size: 14px; line-height: 1.8; }
+.icon-btn { border: 0.5px solid var(--border); border-radius: var(--radius); background: var(--surface2); color: var(--text3); cursor: pointer; padding: 5px 7px; font-size: 15px; line-height: 1; transition: all .15s; }
+.icon-btn:hover { background: var(--surface); color: var(--text); }
+.icon-btn.del-btn:hover { color: #A32D2D; border-color: #F09595; }
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 100; align-items: flex-end; justify-content: center; }
+.modal { background: var(--surface); border-radius: var(--radius-lg) var(--radius-lg) 0 0; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; padding: 20px 16px 40px; }
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.modal-title { font-size: 16px; font-weight: 500; }
+.modal-close { border: none; background: none; font-size: 22px; color: var(--text3); cursor: pointer; padding: 2px 6px; line-height: 1; }
+.modal-footer { display: flex; gap: 8px; margin-top: 16px; }
+.modal-footer button { flex: 1; padding: 12px; border-radius: var(--radius); border: 0.5px solid var(--border2); font-size: 14px; cursor: pointer; font-family: inherit; transition: background .15s; }
+.modal-footer .btn-save { background: var(--teal); color: #fff; border-color: var(--teal); }
+.modal-footer .btn-cancel { background: none; color: var(--text); }
+.modal-footer .btn-cancel:hover { background: var(--surface2); }
 .notice { font-size: 12px; color: var(--text3); background: var(--amber-light); color: var(--amber-dark); padding: 8px 12px; border-radius: var(--radius); margin-bottom: 12px; line-height: 1.6; }
 @media (max-width: 400px) { .sym-grid { grid-template-columns: repeat(2,1fr); } .row2 { grid-template-columns: 1fr; } }
 </style>
@@ -221,7 +234,7 @@ textarea { resize: none; min-height: 72px; line-height: 1.6; }
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, collection, doc, addDoc, getDocs, setDoc, onSnapshot, query, orderBy, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, collection, doc, addDoc, getDocs, setDoc, deleteDoc, updateDoc, onSnapshot, query, orderBy, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyANFoGDTRAkvS7HEWFfT8SrXyx2IgC1IUc",
@@ -239,6 +252,7 @@ const DEFAULT_SYMS = ['头痛','胸闷','心悸','疲劳','肌肉紧张','胃部
 let syms = [...DEFAULT_SYMS];
 let records = [];
 let selSyms = new Set();
+let editSelSyms = new Set();
 let tChart = null;
 
 const recordsRef = () => collection(db, 'records');
@@ -358,9 +372,17 @@ function renderHistory() {
   if (records.length === 0) { d.innerHTML = '<div class="empty">暂无记录</div>'; return; }
   const dietMap = { good:'正常', ok:'基本正常', poor:'不规律', skip:'几乎没吃' };
   d.innerHTML = records.map(r => `
-    <div class="hist-item">
-      <div class="hist-nickname"><i class="ti ti-user" style="font-size:12px;vertical-align:-1px"></i> ${r.nickname || '匿名'}</div>
-      <div class="hist-date">${new Date(r.date).toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}</div>
+    <div class="hist-item" data-id="${r.id}">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
+        <div>
+          <div class="hist-nickname"><i class="ti ti-user" style="font-size:12px;vertical-align:-1px"></i> ${r.nickname || '匿名'}</div>
+          <div class="hist-date">${new Date(r.date).toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}</div>
+        </div>
+        <div style="display:flex;gap:4px;flex-shrink:0">
+          <button class="icon-btn edit-btn" data-id="${r.id}" title="编辑"><i class="ti ti-edit"></i></button>
+          <button class="icon-btn del-btn" data-id="${r.id}" title="删除"><i class="ti ti-trash"></i></button>
+        </div>
+      </div>
       <div class="hist-scores">
         <span class="score-pill anxiety">焦虑 ${r.anxiety}</span>
         <span class="score-pill depress">抑郁 ${r.depress}</span>
@@ -369,7 +391,89 @@ function renderHistory() {
       ${r.syms && r.syms.length ? `<div class="sym-tags">${r.syms.map(s=>`<span class="tag">${s}</span>`).join('')}${r.symStart?`<span class="tag time">${r.symStart}${r.symEnd?' – '+r.symEnd:''}</span>`:''}</div>` : ''}
       ${r.trigger ? `<div class="trigger-text">${r.trigger.slice(0,120)}${r.trigger.length>120?'…':''}</div>` : ''}
     </div>`).join('');
+
+  // 删除
+  d.querySelectorAll('.del-btn').forEach(btn => {
+    btn.onclick = async () => {
+      if (!confirm('确认删除这条记录？')) return;
+      try {
+        await deleteDoc(doc(db, 'records', btn.dataset.id));
+      } catch(e) { alert('删除失败：' + e.message); }
+    };
+  });
+
+  // 编辑
+  d.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.onclick = () => {
+      const r = records.find(x => x.id === btn.dataset.id);
+      if (r) openEditModal(r);
+    };
+  });
 }
+
+function openEditModal(r) {
+  document.getElementById('modal-overlay').style.display = 'flex';
+  document.getElementById('edit-id').value = r.id;
+  document.getElementById('edit-nickname').value = r.nickname || '';
+  document.getElementById('edit-anxiety').value = r.anxiety;
+  document.getElementById('edit-v-anxiety').textContent = r.anxiety;
+  document.getElementById('edit-depress').value = r.depress;
+  document.getElementById('edit-v-depress').textContent = r.depress;
+  document.getElementById('edit-overall').value = r.overall;
+  document.getElementById('edit-v-overall').textContent = r.overall;
+  document.getElementById('edit-sleep').value = r.sleep;
+  document.getElementById('edit-v-sleep').textContent = parseFloat(r.sleep).toFixed(1);
+  document.getElementById('edit-diet').value = r.diet || 'good';
+  document.getElementById('edit-trigger').value = r.trigger || '';
+  document.getElementById('edit-note').value = r.note || '';
+  document.getElementById('edit-sym-start').value = r.symStart || '';
+  document.getElementById('edit-sym-end').value = r.symEnd || '';
+  editSelSyms = new Set(r.syms || []);
+  renderEditSymGrid();
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').style.display = 'none';
+}
+
+function renderEditSymGrid() {
+  const grid = document.getElementById('edit-sym-grid');
+  grid.innerHTML = syms.map(s =>
+    `<button class="sym-btn${editSelSyms.has(s) ? ' on' : ''}" data-sym="${s.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}">${s}</button>`
+  ).join('');
+  grid.onclick = e => {
+    const btn = e.target.closest('.sym-btn');
+    if (!btn) return;
+    const s = btn.dataset.sym;
+    editSelSyms.has(s) ? editSelSyms.delete(s) : editSelSyms.add(s);
+    renderEditSymGrid();
+    document.getElementById('edit-sym-time').style.display = editSelSyms.size > 0 ? 'flex' : 'none';
+  };
+  document.getElementById('edit-sym-time').style.display = editSelSyms.size > 0 ? 'flex' : 'none';
+}
+
+window.saveEdit = async function() {
+  const id = document.getElementById('edit-id').value;
+  const updated = {
+    nickname: document.getElementById('edit-nickname').value.trim() || '匿名',
+    anxiety: parseInt(document.getElementById('edit-anxiety').value),
+    depress: parseInt(document.getElementById('edit-depress').value),
+    overall: parseInt(document.getElementById('edit-overall').value),
+    sleep: parseFloat(document.getElementById('edit-sleep').value),
+    diet: document.getElementById('edit-diet').value,
+    syms: [...editSelSyms],
+    symStart: document.getElementById('edit-sym-start').value,
+    symEnd: document.getElementById('edit-sym-end').value,
+    trigger: document.getElementById('edit-trigger').value.trim(),
+    note: document.getElementById('edit-note').value.trim()
+  };
+  try {
+    await updateDoc(doc(db, 'records', id), updated);
+    closeModal();
+  } catch(e) { alert('保存失败：' + e.message); }
+};
+
+window.closeModal = closeModal;
 
 window.exportCSV = function() {
   const header = '昵称,日期,焦虑,抑郁,整体,睡眠(h),饮食,躯体症状,症状开始,症状结束,触发事件,备注';
@@ -434,5 +538,66 @@ onSnapshot(q, snap => {
   setSyncStatus('error', '连接失败：' + err.message);
 });
 </script>
+
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">编辑记录</span>
+      <button class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <input type="hidden" id="edit-id">
+
+    <div class="card" style="margin-bottom:10px">
+      <div class="card-title"><i class="ti ti-user"></i> 昵称</div>
+      <input type="text" id="edit-nickname" maxlength="20">
+    </div>
+
+    <div class="card" style="margin-bottom:10px">
+      <div class="card-title"><i class="ti ti-mood-heart"></i> 情绪状态</div>
+      <div class="slider-row"><span class="slider-label">焦虑</span><input type="range" min="0" max="10" step="1" id="edit-anxiety" oninput="document.getElementById('edit-v-anxiety').textContent=this.value"><span class="slider-val" id="edit-v-anxiety">5</span></div>
+      <div class="slider-row"><span class="slider-label">抑郁</span><input type="range" min="0" max="10" step="1" id="edit-depress" oninput="document.getElementById('edit-v-depress').textContent=this.value"><span class="slider-val" id="edit-v-depress">4</span></div>
+      <div class="slider-row"><span class="slider-label">整体感受</span><input type="range" min="0" max="10" step="1" id="edit-overall" oninput="document.getElementById('edit-v-overall').textContent=this.value"><span class="slider-val" id="edit-v-overall">5</span></div>
+    </div>
+
+    <div class="card" style="margin-bottom:10px">
+      <div class="card-title"><i class="ti ti-body-scan"></i> 躯体症状</div>
+      <div class="sym-grid" id="edit-sym-grid"></div>
+      <div class="sym-time-row" id="edit-sym-time" style="display:none">
+        <i class="ti ti-clock"></i>
+        <span>开始</span><input type="time" id="edit-sym-start" style="width:110px;padding:6px 8px">
+        <span>结束</span><input type="time" id="edit-sym-end" style="width:110px;padding:6px 8px">
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:10px">
+      <div class="card-title"><i class="ti ti-moon"></i> 睡眠与饮食</div>
+      <div class="row2">
+        <div>
+          <span class="field-label">睡眠（小时）</span>
+          <div class="slider-row" style="margin-bottom:0"><input type="range" min="0" max="12" step="0.5" id="edit-sleep" oninput="document.getElementById('edit-v-sleep').textContent=parseFloat(this.value).toFixed(1)" style="flex:1"><span class="slider-val" id="edit-v-sleep">7.0</span></div>
+        </div>
+        <div>
+          <span class="field-label">饮食规律</span>
+          <select id="edit-diet"><option value="good">正常规律</option><option value="ok">基本正常</option><option value="poor">不规律</option><option value="skip">几乎没吃</option></select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:10px">
+      <div class="card-title"><i class="ti ti-bulb"></i> 触发事件 / 想法</div>
+      <textarea id="edit-trigger" style="min-height:60px"></textarea>
+    </div>
+
+    <div class="card" style="margin-bottom:10px">
+      <div class="card-title"><i class="ti ti-notes"></i> 备注</div>
+      <textarea id="edit-note" style="min-height:48px"></textarea>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">取消</button>
+      <button class="btn-save" onclick="saveEdit()">保存修改</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
