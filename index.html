@@ -673,15 +673,18 @@ function upd(k, v) {
 }
 
 function renderSymGrid() {
-  document.getElementById('sym-grid').innerHTML = syms.map(s =>
-    `<button class="sym-btn${selSyms.has(s) ? ' on' : ''}" onclick="toggleSym('${s.replace(/'/g,"\\'")}'">${s}</button>`
+  const grid = document.getElementById('sym-grid');
+  grid.innerHTML = syms.map(s =>
+    `<button class="sym-btn${selSyms.has(s) ? ' on' : ''}" data-sym="${s.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}">${s}</button>`
   ).join('');
-}
-
-function toggleSym(s) {
-  selSyms.has(s) ? selSyms.delete(s) : selSyms.add(s);
-  renderSymGrid();
-  document.getElementById('sym-time-wrap').style.display = selSyms.size > 0 ? 'flex' : 'none';
+  grid.onclick = function(e) {
+    const btn = e.target.closest('.sym-btn');
+    if (!btn) return;
+    const s = btn.dataset.sym;
+    selSyms.has(s) ? selSyms.delete(s) : selSyms.add(s);
+    renderSymGrid();
+    document.getElementById('sym-time-wrap').style.display = selSyms.size > 0 ? 'flex' : 'none';
+  };
 }
 
 function tab(name, el) {
@@ -808,11 +811,17 @@ function exportCSV() {
 }
 
 function renderSettings() {
-  document.getElementById('custom-syms').innerHTML = syms.map(s =>
-    `<button class="custom-sym-tag" onclick="delSym('${s.replace(/'/g, "\\'")}')">
+  const el = document.getElementById('custom-syms');
+  el.innerHTML = syms.map(s =>
+    `<button class="custom-sym-tag" data-delsym="${s.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}">
       ${s} <i class="ti ti-x" style="font-size:11px;opacity:.6"></i>
     </button>`
   ).join('');
+  el.onclick = function(e) {
+    const btn = e.target.closest('.custom-sym-tag');
+    if (!btn) return;
+    delSym(btn.dataset.delsym);
+  };
   const rt = lsGet('mindlog-remind', null);
   if (rt) document.getElementById('remind-time').value = rt;
 }
