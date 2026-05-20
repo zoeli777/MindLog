@@ -30,7 +30,6 @@
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 80px; }
 .app-header { background: var(--surface); border-bottom: 0.5px solid var(--border); padding: 12px 16px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 10; }
 .app-header h1 { font-size: 17px; font-weight: 500; flex: 1; }
-.app-header .subtitle { font-size: 12px; color: var(--text3); }
 .logo { width: 32px; height: 32px; background: var(--teal-light); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--teal); font-size: 18px; }
 .sync-bar { padding: 6px 16px; font-size: 12px; display: flex; align-items: center; gap: 6px; background: var(--surface2); border-bottom: 0.5px solid var(--border); min-height: 30px; }
 .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); flex-shrink: 0; }
@@ -47,7 +46,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; b
 .card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; margin-bottom: 12px; }
 .card-title { font-size: 13px; color: var(--text2); margin-bottom: 14px; display: flex; align-items: center; gap: 6px; font-weight: 500; }
 .slider-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-.slider-row:last-of-type { margin-bottom: 0; }
 .slider-label { font-size: 13px; color: var(--text2); min-width: 56px; }
 .slider-val { font-size: 14px; font-weight: 500; min-width: 22px; text-align: right; }
 input[type="range"] { flex: 1; -webkit-appearance: none; height: 4px; border-radius: 2px; background: var(--surface2); outline: none; }
@@ -80,6 +78,7 @@ textarea { resize: none; min-height: 72px; line-height: 1.6; }
 .hist-item { padding: 14px 0; border-bottom: 0.5px solid var(--border); }
 .hist-item:last-child { border-bottom: none; }
 .hist-date { font-size: 12px; color: var(--text3); margin-bottom: 6px; }
+.hist-nickname { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 4px; }
 .hist-scores { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
 .score-pill { font-size: 12px; padding: 3px 9px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px; }
 .score-pill.anxiety { background: var(--teal-light); color: var(--teal-dark); }
@@ -93,155 +92,136 @@ textarea { resize: none; min-height: 72px; line-height: 1.6; }
 .action-btn:hover { background: var(--surface2); }
 .action-btn.danger { color: #A32D2D; border-color: #F09595; }
 .empty { text-align: center; padding: 2.5rem 1rem; color: var(--text3); font-size: 14px; line-height: 1.8; }
-.remind-msg { font-size: 12px; color: var(--teal); margin-top: 8px; min-height: 16px; }
-.custom-sym-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; min-height: 28px; }
-.custom-sym-tag { font-size: 12px; padding: 4px 10px; border-radius: 20px; background: var(--purple-light); color: var(--purple-dark); cursor: pointer; display: flex; align-items: center; gap: 4px; border: none; font-family: inherit; }
-.add-row { display: flex; gap: 8px; }
-.add-row input { flex: 1; }
-.add-row button { padding: 10px 14px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: none; color: var(--text); cursor: pointer; font-size: 16px; transition: background .15s; }
-.add-row button:hover { background: var(--surface2); }
-.login-wrap { max-width: 360px; margin: 60px auto; padding: 16px; text-align: center; }
-.login-btn { width: 100%; padding: 13px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--surface); color: var(--text); font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-family: inherit; transition: background .15s; margin-top: 16px; }
-.login-btn:hover { background: var(--surface2); }
-.login-title { font-size: 20px; font-weight: 500; margin-bottom: 8px; }
-.login-sub { font-size: 14px; color: var(--text2); line-height: 1.6; }
+.notice { font-size: 12px; color: var(--text3); background: var(--amber-light); color: var(--amber-dark); padding: 8px 12px; border-radius: var(--radius); margin-bottom: 12px; line-height: 1.6; }
 @media (max-width: 400px) { .sym-grid { grid-template-columns: repeat(2,1fr); } .row2 { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
 
-<div id="login-screen" class="login-wrap">
-  <div class="logo" style="width:56px;height:56px;font-size:28px;margin:0 auto 16px"><i class="ti ti-heart-rate-monitor"></i></div>
-  <div class="login-title">MindLog</div>
-  <div class="login-sub">登录后数据自动同步到所有设备，安全存储在你自己的云端。</div>
-  <button class="login-btn" id="login-btn">
-    <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/></svg>
-    使用 Google 账号登录
-  </button>
-  <div id="login-err" style="font-size:12px;color:#A32D2D;margin-top:10px;min-height:16px"></div>
+<header class="app-header">
+  <div class="logo"><i class="ti ti-heart-rate-monitor" aria-hidden="true"></i></div>
+  <h1>MindLog</h1>
+  <span style="font-size:12px;color:var(--text3)">共享记录板</span>
+</header>
+<div class="sync-bar">
+  <div class="sync-dot syncing" id="sync-dot"></div>
+  <span id="sync-text" style="color:var(--text3)">连接中…</span>
 </div>
 
-<div id="app-screen" style="display:none">
-  <header class="app-header">
-    <div class="logo"><i class="ti ti-heart-rate-monitor" aria-hidden="true"></i></div>
-    <div style="flex:1"><h1>MindLog</h1><div class="subtitle">焦虑抑郁躯体化记录</div></div>
-    <button onclick="signOut()" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:13px">退出</button>
-  </header>
-  <div class="sync-bar" id="sync-bar">
-    <div class="sync-dot" id="sync-dot"></div>
-    <span id="sync-text" style="color:var(--text3)">连接中…</span>
+<main>
+  <div id="sec-record" class="section active">
+    <div class="notice"><i class="ti ti-users" style="font-size:13px;vertical-align:-2px"></i> 这是一个公开共享的记录板，所有人都可以看到所有记录。</div>
+
+    <div class="card">
+      <div class="card-title"><i class="ti ti-user" aria-hidden="true"></i> 你的昵称</div>
+      <input type="text" id="t-nickname" placeholder="输入昵称（可匿名，如「小蓝」）" maxlength="20">
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i class="ti ti-mood-heart" aria-hidden="true"></i> 今日情绪状态</div>
+      <div class="slider-row"><span class="slider-label">焦虑</span><input type="range" min="0" max="10" value="5" step="1" id="s-anxiety" oninput="upd('anxiety',this.value)"><span class="slider-val" id="v-anxiety">5</span></div>
+      <div class="slider-row"><span class="slider-label">抑郁</span><input type="range" min="0" max="10" value="4" step="1" id="s-depress" oninput="upd('depress',this.value)"><span class="slider-val" id="v-depress">4</span></div>
+      <div class="slider-row"><span class="slider-label">整体感受</span><input type="range" min="0" max="10" value="5" step="1" id="s-overall" oninput="upd('overall',this.value)"><span class="slider-val" id="v-overall">5</span></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">0 = 完全没有 · 10 = 非常严重</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i class="ti ti-body-scan" aria-hidden="true"></i> 躯体症状</div>
+      <div class="sym-grid" id="sym-grid"></div>
+      <div class="sym-time-row" id="sym-time-wrap" style="display:none">
+        <i class="ti ti-clock" aria-hidden="true"></i>
+        <span>开始</span><input type="time" id="sym-start" style="width:120px;padding:6px 8px">
+        <span>结束</span><input type="time" id="sym-end" style="width:120px;padding:6px 8px">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i class="ti ti-bulb" aria-hidden="true"></i> 触发事件 / 想法</div>
+      <textarea id="t-trigger" placeholder="今天发生了什么？有哪些反复出现的念头或担忧？"></textarea>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i class="ti ti-moon" aria-hidden="true"></i> 睡眠与饮食</div>
+      <div class="row2">
+        <div>
+          <span class="field-label">昨晚睡眠（小时）</span>
+          <div class="slider-row" style="margin-bottom:0"><input type="range" min="0" max="12" value="7" step="0.5" id="s-sleep" oninput="upd('sleep',this.value)" style="flex:1"><span class="slider-val" id="v-sleep">7.0</span></div>
+        </div>
+        <div>
+          <span class="field-label">饮食规律</span>
+          <select id="sel-diet"><option value="good">正常规律</option><option value="ok">基本正常</option><option value="poor">不规律</option><option value="skip">几乎没吃</option></select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i class="ti ti-notes" aria-hidden="true"></i> 补充备注</div>
+      <textarea id="t-note" placeholder="其他想记录的内容…" style="min-height:52px"></textarea>
+    </div>
+
+    <button class="save-btn" id="save-btn" onclick="saveRecord()">
+      <i class="ti ti-device-floppy" aria-hidden="true"></i> 保存记录
+    </button>
+    <div class="save-msg" id="save-msg"></div>
   </div>
 
-  <main>
-    <div id="sec-record" class="section active">
-      <div class="card">
-        <div class="card-title"><i class="ti ti-mood-heart" aria-hidden="true"></i> 今日情绪状态</div>
-        <div class="slider-row"><span class="slider-label">焦虑</span><input type="range" min="0" max="10" value="5" step="1" id="s-anxiety" oninput="upd('anxiety',this.value)"><span class="slider-val" id="v-anxiety">5</span></div>
-        <div class="slider-row"><span class="slider-label">抑郁</span><input type="range" min="0" max="10" value="4" step="1" id="s-depress" oninput="upd('depress',this.value)"><span class="slider-val" id="v-depress">4</span></div>
-        <div class="slider-row"><span class="slider-label">整体感受</span><input type="range" min="0" max="10" value="5" step="1" id="s-overall" oninput="upd('overall',this.value)"><span class="slider-val" id="v-overall">5</span></div>
-        <div style="font-size:11px;color:var(--text3);margin-top:4px">0 = 完全没有 · 10 = 非常严重</div>
-      </div>
-      <div class="card">
-        <div class="card-title"><i class="ti ti-body-scan" aria-hidden="true"></i> 躯体症状</div>
-        <div class="sym-grid" id="sym-grid"></div>
-        <div class="sym-time-row" id="sym-time-wrap" style="display:none">
-          <i class="ti ti-clock" aria-hidden="true"></i>
-          <span>开始</span><input type="time" id="sym-start" style="width:120px;padding:6px 8px">
-          <span>结束</span><input type="time" id="sym-end" style="width:120px;padding:6px 8px">
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title"><i class="ti ti-bulb" aria-hidden="true"></i> 触发事件 / 想法</div>
-        <textarea id="t-trigger" placeholder="今天发生了什么？有哪些反复出现的念头或担忧？"></textarea>
-      </div>
-      <div class="card">
-        <div class="card-title"><i class="ti ti-moon" aria-hidden="true"></i> 睡眠与饮食</div>
-        <div class="row2">
-          <div>
-            <span class="field-label">昨晚睡眠（小时）</span>
-            <div class="slider-row" style="margin-bottom:0"><input type="range" min="0" max="12" value="7" step="0.5" id="s-sleep" oninput="upd('sleep',this.value)" style="flex:1"><span class="slider-val" id="v-sleep">7.0</span></div>
-          </div>
-          <div>
-            <span class="field-label">饮食规律</span>
-            <select id="sel-diet"><option value="good">正常规律</option><option value="ok">基本正常</option><option value="poor">不规律</option><option value="skip">几乎没吃</option></select>
-          </div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title"><i class="ti ti-notes" aria-hidden="true"></i> 补充备注</div>
-        <textarea id="t-note" placeholder="其他想记录的内容…" style="min-height:52px"></textarea>
-      </div>
-      <button class="save-btn" id="save-btn" onclick="saveRecord()"><i class="ti ti-device-floppy" aria-hidden="true"></i> 保存今日记录</button>
-      <div class="save-msg" id="save-msg"></div>
+  <div id="sec-trend" class="section">
+    <div class="metric-grid" id="metrics">
+      <div class="metric"><div class="metric-num">—</div><div class="metric-lbl">焦虑均值</div></div>
+      <div class="metric"><div class="metric-num">—</div><div class="metric-lbl">抑郁均值</div></div>
+      <div class="metric"><div class="metric-num">—</div><div class="metric-lbl">睡眠均值(h)</div></div>
     </div>
-
-    <div id="sec-trend" class="section">
-      <div class="metric-grid" id="metrics">
-        <div class="metric"><div class="metric-num">—</div><div class="metric-lbl">焦虑均值</div></div>
-        <div class="metric"><div class="metric-num">—</div><div class="metric-lbl">抑郁均值</div></div>
-        <div class="metric"><div class="metric-num">—</div><div class="metric-lbl">睡眠均值(h)</div></div>
-      </div>
-      <div class="card">
-        <div class="card-title"><i class="ti ti-chart-line" aria-hidden="true"></i> 近期趋势（最近7条）</div>
-        <div class="chart-wrap"><canvas id="trend-chart" role="img" aria-label="情绪趋势图"></canvas></div>
-        <div class="legend">
-          <span><span class="dot" style="background:#1D9E75"></span>焦虑</span>
-          <span><span class="dot" style="background:#7F77DD"></span>抑郁</span>
-          <span><span class="dot" style="background:#EF9F27"></span>整体感受</span>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title"><i class="ti ti-body-scan" aria-hidden="true"></i> 症状频率（最近7条）</div>
-        <div id="sym-freq"><div class="empty">暂无数据</div></div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-chart-line" aria-hidden="true"></i> 全部记录趋势（最近20条）</div>
+      <div class="chart-wrap"><canvas id="trend-chart" role="img" aria-label="情绪趋势图"></canvas></div>
+      <div class="legend">
+        <span><span class="dot" style="background:#1D9E75"></span>焦虑</span>
+        <span><span class="dot" style="background:#7F77DD"></span>抑郁</span>
+        <span><span class="dot" style="background:#EF9F27"></span>整体感受</span>
       </div>
     </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-body-scan" aria-hidden="true"></i> 症状频率（全部记录）</div>
+      <div id="sym-freq"><div class="empty">暂无数据</div></div>
+    </div>
+  </div>
 
-    <div id="sec-history" class="section">
-      <div class="card">
-        <div class="card-title"><i class="ti ti-calendar" aria-hidden="true"></i> 历史记录</div>
-        <div id="hist-list"><div class="empty">加载中…</div></div>
-      </div>
-      <div class="card">
-        <div class="card-title"><i class="ti ti-download" aria-hidden="true"></i> 导出数据</div>
-        <button class="action-btn" onclick="exportCSV()"><i class="ti ti-file-export" aria-hidden="true"></i> 导出为 CSV（可发给医生）</button>
+  <div id="sec-history" class="section">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-calendar" aria-hidden="true"></i> 所有人的记录</div>
+      <div id="hist-list"><div class="empty">加载中…</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-download" aria-hidden="true"></i> 导出数据</div>
+      <button class="action-btn" onclick="exportCSV()"><i class="ti ti-file-export" aria-hidden="true"></i> 导出全部记录为 CSV</button>
+    </div>
+  </div>
+
+  <div id="sec-settings" class="section">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-tag" aria-hidden="true"></i> 症状标签（所有人共用）</div>
+      <div id="custom-syms" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
+      <div class="add-row">
+        <input type="text" id="new-sym" placeholder="添加新症状…" maxlength="10">
+        <button onclick="addSym()" aria-label="添加"><i class="ti ti-plus"></i></button>
       </div>
     </div>
-
-    <div id="sec-settings" class="section">
-      <div class="card">
-        <div class="card-title"><i class="ti ti-user" aria-hidden="true"></i> 账号</div>
-        <div id="user-info" style="font-size:13px;color:var(--text2);margin-bottom:10px"></div>
-        <button class="action-btn" onclick="signOut()"><i class="ti ti-logout" aria-hidden="true"></i> 退出登录</button>
-      </div>
-      <div class="card">
-        <div class="card-title"><i class="ti ti-tag" aria-hidden="true"></i> 自定义症状标签</div>
-        <div class="custom-sym-list" id="custom-syms"></div>
-        <div class="add-row">
-          <input type="text" id="new-sym" placeholder="输入新症状名称…" maxlength="10">
-          <button onclick="addSym()" aria-label="添加症状"><i class="ti ti-plus"></i></button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title"><i class="ti ti-database" aria-hidden="true"></i> 数据管理</div>
-        <p style="font-size:13px;color:var(--text2);margin-bottom:10px;line-height:1.6">数据加密存储在 Google Firebase，仅你本人可访问。</p>
-        <button class="action-btn danger" onclick="clearData()"><i class="ti ti-trash" aria-hidden="true"></i> 清除所有记录</button>
-      </div>
-      <div style="text-align:center;font-size:12px;color:var(--text3);padding:1rem">MindLog · 仅供个人记录参考，不替代专业医疗建议</div>
+    <div style="text-align:center;font-size:12px;color:var(--text3);padding:1rem">
+      MindLog · 仅供个人记录参考，不替代专业医疗建议
     </div>
-  </main>
+  </div>
+</main>
 
-  <nav class="bottom-nav">
-    <button class="nav-btn active" onclick="tab('record',this)"><i class="ti ti-pencil" aria-hidden="true"></i>记录</button>
-    <button class="nav-btn" onclick="tab('trend',this)"><i class="ti ti-chart-line" aria-hidden="true"></i>趋势</button>
-    <button class="nav-btn" onclick="tab('history',this)"><i class="ti ti-calendar" aria-hidden="true"></i>历史</button>
-    <button class="nav-btn" onclick="tab('settings',this)"><i class="ti ti-settings" aria-hidden="true"></i>设置</button>
-  </nav>
-</div>
+<nav class="bottom-nav">
+  <button class="nav-btn active" onclick="tab('record',this)"><i class="ti ti-pencil" aria-hidden="true"></i>记录</button>
+  <button class="nav-btn" onclick="tab('trend',this)"><i class="ti ti-chart-line" aria-hidden="true"></i>趋势</button>
+  <button class="nav-btn" onclick="tab('history',this)"><i class="ti ti-calendar" aria-hidden="true"></i>历史</button>
+  <button class="nav-btn" onclick="tab('settings',this)"><i class="ti ti-settings" aria-hidden="true"></i>设置</button>
+</nav>
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut as fbSignOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, collection, doc, addDoc, getDocs, setDoc, deleteDoc, onSnapshot, query, orderBy, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, collection, doc, addDoc, getDocs, setDoc, onSnapshot, query, orderBy, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyANFoGDTRAkvS7HEWFfT8SrXyx2IgC1IUc",
@@ -253,7 +233,6 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
 const db = getFirestore(app);
 
 const DEFAULT_SYMS = ['头痛','胸闷','心悸','疲劳','肌肉紧张','胃部不适','头晕','手抖','呼吸困难','失眠'];
@@ -261,29 +240,26 @@ let syms = [...DEFAULT_SYMS];
 let records = [];
 let selSyms = new Set();
 let tChart = null;
-let currentUser = null;
-let unsubRecords = null;
 
-function userRef() { return doc(db, 'users', currentUser.uid); }
-function recordsRef() { return collection(db, 'users', currentUser.uid, 'records'); }
+const recordsRef = () => collection(db, 'records');
+const settingsRef = () => doc(db, 'settings', 'shared');
 
 function setSyncStatus(state, text) {
-  const dot = document.getElementById('sync-dot');
-  const txt = document.getElementById('sync-text');
-  dot.className = 'sync-dot ' + state;
-  txt.textContent = text;
+  document.getElementById('sync-dot').className = 'sync-dot ' + state;
+  document.getElementById('sync-text').textContent = text;
 }
 
 function upd(k, v) {
   document.getElementById('v-' + k).textContent = k === 'sleep' ? parseFloat(v).toFixed(1) : Math.round(v);
 }
+window.upd = upd;
 
 function renderSymGrid() {
   const grid = document.getElementById('sym-grid');
   grid.innerHTML = syms.map(s =>
     `<button class="sym-btn${selSyms.has(s) ? ' on' : ''}" data-sym="${s.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}">${s}</button>`
   ).join('');
-  grid.onclick = function(e) {
+  grid.onclick = e => {
     const btn = e.target.closest('.sym-btn');
     if (!btn) return;
     const s = btn.dataset.sym;
@@ -293,7 +269,7 @@ function renderSymGrid() {
   };
 }
 
-function tab(name, el) {
+window.tab = function(name, el) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('sec-' + name).classList.add('active');
@@ -301,14 +277,16 @@ function tab(name, el) {
   if (name === 'trend') renderTrend();
   if (name === 'history') renderHistory();
   if (name === 'settings') renderSettings();
-}
+};
 
-async function saveRecord() {
+window.saveRecord = async function() {
+  const nickname = document.getElementById('t-nickname').value.trim() || '匿名';
   const btn = document.getElementById('save-btn');
   btn.disabled = true;
   setSyncStatus('syncing', '保存中…');
   const r = {
     date: new Date().toISOString(),
+    nickname,
     anxiety: parseInt(document.getElementById('s-anxiety').value),
     depress: parseInt(document.getElementById('s-depress').value),
     overall: parseInt(document.getElementById('s-overall').value),
@@ -324,7 +302,7 @@ async function saveRecord() {
     await addDoc(recordsRef(), r);
     setSyncStatus('synced', '已同步');
     const msg = document.getElementById('save-msg');
-    msg.textContent = '✓ 已保存并同步';
+    msg.textContent = '✓ 已保存';
     setTimeout(() => msg.textContent = '', 2500);
     selSyms.clear();
     renderSymGrid();
@@ -332,72 +310,73 @@ async function saveRecord() {
     ['t-trigger','t-note'].forEach(id => document.getElementById(id).value = '');
     ['sym-start','sym-end'].forEach(id => document.getElementById(id).value = '');
   } catch(e) {
-    setSyncStatus('error', '保存失败，请重试');
-    console.error(e);
+    setSyncStatus('error', '保存失败：' + e.message);
   }
   btn.disabled = false;
-}
+};
 
 function renderTrend() {
-  const last7 = records.slice(0, 7).reverse();
+  const last20 = records.slice(0, 20).reverse();
   const mDiv = document.getElementById('metrics');
   if (records.length === 0) {
     mDiv.innerHTML = '<div class="empty" style="grid-column:span 3">暂无记录</div>';
     document.getElementById('sym-freq').innerHTML = '<div class="empty">暂无数据</div>';
     return;
   }
-  const n = Math.min(records.length, 7);
-  const avg = k => (records.slice(0,7).reduce((a,r) => a + r[k], 0) / n).toFixed(1);
+  const n = Math.min(records.length, 20);
+  const avg = k => (records.slice(0,20).reduce((a,r) => a + r[k], 0) / n).toFixed(1);
   mDiv.innerHTML = `
     <div class="metric"><div class="metric-num">${avg('anxiety')}</div><div class="metric-lbl">焦虑均值</div></div>
     <div class="metric"><div class="metric-num">${avg('depress')}</div><div class="metric-lbl">抑郁均值</div></div>
     <div class="metric"><div class="metric-num">${avg('sleep')}</div><div class="metric-lbl">睡眠均值(h)</div></div>`;
-  const labels = last7.map(r => r.date.slice(5,10));
+  const labels = last20.map(r => (r.nickname || '匿名').slice(0,3) + ' ' + r.date.slice(5,10));
   if (tChart) tChart.destroy();
   tChart = new Chart(document.getElementById('trend-chart'), {
     type: 'line',
     data: { labels, datasets: [
-      { label:'焦虑', data: last7.map(r=>r.anxiety), borderColor:'#1D9E75', backgroundColor:'#1D9E7518', tension:.35, pointRadius:4, fill:true },
-      { label:'抑郁', data: last7.map(r=>r.depress), borderColor:'#7F77DD', backgroundColor:'#7F77DD12', tension:.35, pointRadius:4, fill:true },
-      { label:'整体', data: last7.map(r=>r.overall), borderColor:'#EF9F27', backgroundColor:'transparent', tension:.35, pointRadius:4, borderDash:[5,3] }
+      { label:'焦虑', data: last20.map(r=>r.anxiety), borderColor:'#1D9E75', backgroundColor:'#1D9E7518', tension:.35, pointRadius:3, fill:true },
+      { label:'抑郁', data: last20.map(r=>r.depress), borderColor:'#7F77DD', backgroundColor:'#7F77DD12', tension:.35, pointRadius:3, fill:true },
+      { label:'整体', data: last20.map(r=>r.overall), borderColor:'#EF9F27', backgroundColor:'transparent', tension:.35, pointRadius:3, borderDash:[5,3] }
     ]},
     options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
-      scales: { y:{min:0,max:10,ticks:{stepSize:2,font:{size:11}},grid:{color:'rgba(128,128,128,0.08)'}}, x:{ticks:{font:{size:11}},grid:{display:false}} } }
+      scales: { y:{min:0,max:10,ticks:{stepSize:2,font:{size:11}},grid:{color:'rgba(128,128,128,0.08)'}}, x:{ticks:{font:{size:9},maxRotation:45},grid:{display:false}} } }
   });
   const freq = {};
-  records.slice(0,7).forEach(r => r.syms.forEach(s => { freq[s] = (freq[s]||0)+1; }));
-  const sorted = Object.entries(freq).sort((a,b) => b[1]-a[1]);
+  records.forEach(r => r.syms.forEach(s => { freq[s] = (freq[s]||0)+1; }));
+  const sorted = Object.entries(freq).sort((a,b) => b[1]-a[1]).slice(0,8);
   document.getElementById('sym-freq').innerHTML = sorted.length === 0
     ? '<div class="empty">暂无症状记录</div>'
     : sorted.map(([s,c]) => `<div class="sym-bar-row">
         <span style="font-size:12px;color:var(--text2);min-width:70px">${s}</span>
-        <div class="bar-bg"><div class="bar-fill" style="width:${Math.round(c/n*100)}%;background:#AFA9EC"></div></div>
+        <div class="bar-bg"><div class="bar-fill" style="width:${Math.round(c/records.length*100)}%;background:#AFA9EC"></div></div>
         <span style="font-size:12px;color:var(--text3);min-width:28px;text-align:right">${c}次</span>
       </div>`).join('');
 }
 
 function renderHistory() {
   const d = document.getElementById('hist-list');
-  if (records.length === 0) { d.innerHTML = '<div class="empty">暂无记录<br>去「记录」页面添加第一条吧</div>'; return; }
+  if (records.length === 0) { d.innerHTML = '<div class="empty">暂无记录</div>'; return; }
   const dietMap = { good:'正常', ok:'基本正常', poor:'不规律', skip:'几乎没吃' };
   d.innerHTML = records.map(r => `
     <div class="hist-item">
+      <div class="hist-nickname"><i class="ti ti-user" style="font-size:12px;vertical-align:-1px"></i> ${r.nickname || '匿名'}</div>
       <div class="hist-date">${new Date(r.date).toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}</div>
       <div class="hist-scores">
-        <span class="score-pill anxiety"><i class="ti ti-mood-nervous" style="font-size:13px"></i>焦虑 ${r.anxiety}</span>
-        <span class="score-pill depress"><i class="ti ti-mood-sad" style="font-size:13px"></i>抑郁 ${r.depress}</span>
-        <span class="score-pill sleep"><i class="ti ti-moon" style="font-size:13px"></i>睡 ${r.sleep}h · ${dietMap[r.diet]||r.diet}</span>
+        <span class="score-pill anxiety">焦虑 ${r.anxiety}</span>
+        <span class="score-pill depress">抑郁 ${r.depress}</span>
+        <span class="score-pill sleep">睡 ${r.sleep}h · ${dietMap[r.diet]||r.diet}</span>
       </div>
-      ${r.syms.length ? `<div class="sym-tags">${r.syms.map(s=>`<span class="tag">${s}</span>`).join('')}${r.symStart?`<span class="tag time">${r.symStart}${r.symEnd?' – '+r.symEnd:''}</span>`:''}</div>` : ''}
-      ${r.trigger ? `<div class="trigger-text">${r.trigger.slice(0,100)}${r.trigger.length>100?'…':''}</div>` : ''}
+      ${r.syms && r.syms.length ? `<div class="sym-tags">${r.syms.map(s=>`<span class="tag">${s}</span>`).join('')}${r.symStart?`<span class="tag time">${r.symStart}${r.symEnd?' – '+r.symEnd:''}</span>`:''}</div>` : ''}
+      ${r.trigger ? `<div class="trigger-text">${r.trigger.slice(0,120)}${r.trigger.length>120?'…':''}</div>` : ''}
     </div>`).join('');
 }
 
-function exportCSV() {
-  const header = '日期,焦虑(0-10),抑郁(0-10),整体(0-10),睡眠(h),饮食,躯体症状,症状开始,症状结束,触发事件,备注';
+window.exportCSV = function() {
+  const header = '昵称,日期,焦虑,抑郁,整体,睡眠(h),饮食,躯体症状,症状开始,症状结束,触发事件,备注';
   const rows = records.map(r => [
-    new Date(r.date).toLocaleString('zh-CN'), r.anxiety, r.depress, r.overall, r.sleep, r.diet,
-    r.syms.join('|'), r.symStart||'', r.symEnd||'',
+    r.nickname||'匿名', new Date(r.date).toLocaleString('zh-CN'),
+    r.anxiety, r.depress, r.overall, r.sleep, r.diet,
+    (r.syms||[]).join('|'), r.symStart||'', r.symEnd||'',
     (r.trigger||'').replace(/,/g,'，').replace(/\n/g,' '),
     (r.note||'').replace(/,/g,'，').replace(/\n/g,' ')
   ].join(','));
@@ -406,103 +385,53 @@ function exportCSV() {
   a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'}));
   a.download = `MindLog_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
-}
+};
 
 function renderSettings() {
   const el = document.getElementById('custom-syms');
   el.innerHTML = syms.map(s =>
-    `<button class="custom-sym-tag" data-delsym="${s.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}">${s} <i class="ti ti-x" style="font-size:11px;opacity:.6"></i></button>`
+    `<button style="font-size:12px;padding:4px 10px;border-radius:20px;background:var(--purple-light);color:var(--purple-dark);cursor:pointer;display:inline-flex;align-items:center;gap:4px;border:none;font-family:inherit" data-delsym="${s.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}">${s} <i class="ti ti-x" style="font-size:11px;opacity:.6"></i></button>`
   ).join('');
-  el.onclick = function(e) {
-    const btn = e.target.closest('.custom-sym-tag');
+  el.onclick = e => {
+    const btn = e.target.closest('[data-delsym]');
     if (!btn) return;
     delSym(btn.dataset.delsym);
   };
-  if (currentUser) {
-    document.getElementById('user-info').textContent = '已登录：' + (currentUser.displayName || currentUser.email);
-  }
 }
 
-async function addSym() {
+window.addSym = async function() {
   const inp = document.getElementById('new-sym');
   const v = inp.value.trim();
   if (!v || syms.includes(v)) return;
   syms.push(v); inp.value = '';
   renderSymGrid(); renderSettings();
-  try { await setDoc(userRef(), { syms }, { merge: true }); } catch(e) { console.error(e); }
-}
+  try { await setDoc(settingsRef(), { syms }, { merge: true }); } catch(e) { console.error(e); }
+};
 
 async function delSym(s) {
   syms = syms.filter(x => x !== s);
   selSyms.delete(s);
   renderSymGrid(); renderSettings();
-  try { await setDoc(userRef(), { syms }, { merge: true }); } catch(e) { console.error(e); }
+  try { await setDoc(settingsRef(), { syms }, { merge: true }); } catch(e) { console.error(e); }
 }
 
-async function clearData() {
-  if (!confirm('确认清除所有记录？此操作不可恢复。')) return;
-  setSyncStatus('syncing', '清除中…');
-  try {
-    const qs = await getDocs(recordsRef());
-    await Promise.all(qs.docs.map(d => deleteDoc(d.ref)));
-    records = [];
-    setSyncStatus('synced', '已同步');
-    renderHistory();
-  } catch(e) { setSyncStatus('error', '清除失败'); }
-}
+// 加载共享设置（症状标签）
+try {
+  const snap = await getDoc(settingsRef());
+  if (snap.exists() && snap.data().syms) syms = snap.data().syms;
+} catch(e) {}
+renderSymGrid();
 
-window.signOut = async function() {
-  if (unsubRecords) unsubRecords();
-  await fbSignOut(auth);
-};
-
-window.addSym = addSym;
-window.clearData = clearData;
-window.tab = tab;
-window.saveRecord = saveRecord;
-window.exportCSV = exportCSV;
-window.upd = upd;
-
-document.getElementById('login-btn').onclick = async () => {
-  document.getElementById('login-err').textContent = '';
-  try {
-    const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
-  } catch(e) {
-    document.getElementById('login-err').textContent = '登录失败，请重试：' + e.message;
-  }
-};
-
-onAuthStateChanged(auth, async user => {
-  if (user) {
-    currentUser = user;
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app-screen').style.display = 'block';
-    setSyncStatus('syncing', '连接中…');
-
-    // 加载用户设置（自定义症状）
-    try {
-      const snap = await getDoc(userRef());
-      if (snap.exists() && snap.data().syms) syms = snap.data().syms;
-    } catch(e) {}
-    renderSymGrid();
-
-    // 实时监听记录
-    const q = query(recordsRef(), orderBy('date', 'desc'));
-    unsubRecords = onSnapshot(q, snap => {
-      records = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      setSyncStatus('synced', '已同步 · ' + (currentUser.displayName || currentUser.email));
-      renderHistory();
-    }, err => {
-      setSyncStatus('error', '同步失败');
-      console.error(err);
-    });
-  } else {
-    currentUser = null;
-    document.getElementById('login-screen').style.display = 'block';
-    document.getElementById('app-screen').style.display = 'none';
-    if (unsubRecords) unsubRecords();
-  }
+// 实时监听所有记录
+const q = query(recordsRef(), orderBy('date', 'desc'));
+onSnapshot(q, snap => {
+  records = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  setSyncStatus('synced', `已同步 · ${records.length} 条记录`);
+  const activeSection = document.querySelector('.section.active')?.id;
+  if (activeSection === 'sec-trend') renderTrend();
+  if (activeSection === 'sec-history') renderHistory();
+}, err => {
+  setSyncStatus('error', '连接失败：' + err.message);
 });
 </script>
 </body>
