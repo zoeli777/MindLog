@@ -43,7 +43,12 @@ def check_page_availability():
         has_showing = "showing 1 to" in content_lower
 
         print(f"add to cart: {has_add_to_cart}, price: {has_price}, showing results: {has_showing}")
-
+        
+        # 临时调试：打印页面关键片段
+        print("=== PAGE SNIPPET ===")
+        print(content[:3000])
+        print("=== END SNIPPET ===")
+                
         if has_add_to_cart and has_price and has_showing:
             return True, content
         else:
