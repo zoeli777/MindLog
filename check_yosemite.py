@@ -5,8 +5,8 @@ from email.mime.text import MIMEText
 from datetime import datetime
 from playwright.sync_api import sync_playwright
 
-CHECK_IN = "06/20/2026"
-CHECK_OUT = "06/21/2026"
+CHECK_IN = "06/18/2026"
+CHECK_OUT = "06/19/2026"
 TARGET_EMAIL = "liqinrui1991@gmail.com"
 LARK_WEBHOOK = os.environ.get("LARK_WEBHOOK")
 
