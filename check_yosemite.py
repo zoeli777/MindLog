@@ -37,4 +37,4 @@ def check_availability():
     # Step 3: 获取结果页
     results_url = "https://reservations.ahlsmsworld.com/Yosemite/Plan-Your-Trip/Accommodation-Search/Results"
     r3 = session.get(results_url, timeout=20)
-    print(f"Step 3 status: {r3.status_code}, length:
+    print(f"Step 3 status: {r3.status_code}, length: {len(r3.text)}")
