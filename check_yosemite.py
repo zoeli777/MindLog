@@ -24,10 +24,9 @@ def check_availability():
 
         # 调试：打印页面中间部分
         content = page.content()
-        print("=== SNIPPET (150000-155000) ===")
-        print(content[150000:155000])
-        print("=== END ===")
-        
+        print("=== SNIPPET (220000-225000) ===")
+        print(content[220000:225000])
+        print("=== END ===")        
         
         content = page.content().lower()
         print(f"Page loaded, length: {len(content)}")
