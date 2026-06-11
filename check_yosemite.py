@@ -1,44 +1,43 @@
-import requests
 import smtplib
 import os
+import requests
 from email.mime.text import MIMEText
 from datetime import datetime
+from playwright.sync_api import sync_playwright
 
-CHECK_IN = "06/18/2026"
-CHECK_OUT = "06/19/2026"
+CHECK_IN = "06/20/2026"
+CHECK_OUT = "06/21/2026"
 TARGET_EMAIL = "liqinrui1991@gmail.com"
 LARK_WEBHOOK = os.environ.get("LARK_WEBHOOK")
 
 def check_availability():
-    # 直接调用 Aramark 的房间搜索 API
-    url = "https://www.travelyosemite.com/api/2.0/redis/rooms/search"
-    params = {
-        "propertyCode": "YRLODGE",
-        "arrivalDate": CHECK_IN,
-        "departureDate": CHECK_OUT,
-        "adults": "1",
-        "children": "0",
-        "numRooms": "1",
-    }
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
-        "Accept": "application/json",
-        "Referer": "https://www.travelyosemite.com/lodging/yosemite-valley-lodge/",
-    }
-    try:
-        resp = requests.get(url, params=params, headers=headers, timeout=20)
-        print(f"API status: {resp.status_code}")
-        print(f"API response: {resp.text[:1000]}")
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
         
-        if resp.status_code == 200:
-            data = resp.json()
-            rooms = data.get("rooms", data.get("results", data.get("data", [])))
-            print(f"Rooms found: {len(rooms) if isinstance(rooms, list) else rooms}")
-            return len(rooms) > 0 if isinstance(rooms, list) else False
-        return False
-    except Exception as e:
-        print(f"Error: {e}")
-        return False
+        url = (f"https://www.travelyosemite.com/lodging/yosemite-valley-lodge/"
+               f"?arrive={CHECK_IN}&depart={CHECK_OUT}&adults=1&children=0")
+        
+        print(f"Loading: {url}")
+        page.goto(url, wait_until="networkidle", timeout=30000)
+        
+        # 等待结果加载
+        page.wait_for_timeout(5000)
+        
+        content = page.content().lower()
+        print(f"Page loaded, length: {len(content)}")
+        
+        # 截图调试（可选）
+        # page.screenshot(path="screenshot.png")
+        
+        has_add_to_cart = "add to cart" in content
+        has_price = "average/night" in content or "per night" in content
+        has_showing = "showing 1 to" in content
+        
+        print(f"add to cart: {has_add_to_cart}, price: {has_price}, showing: {has_showing}")
+        
+        browser.close()
+        return has_add_to_cart and has_price and has_showing
 
 def send_lark(message):
     if not LARK_WEBHOOK:
@@ -49,7 +48,7 @@ def send_lark(message):
             "msg_type": "text",
             "content": {"text": message}
         }, timeout=10)
-        print(f"Lark sent: {resp.status_code}, {resp.text}")
+        print(f"Lark sent: {resp.status_code}")
     except Exception as e:
         print(f"Lark error: {e}")
 
@@ -83,7 +82,7 @@ def main():
                f"⏰ {now}\n"
                f"👉 https://www.travelyosemite.com/lodging/yosemite-valley-lodge/?arrive=06/20/2026&depart=06/21/2026&adults=1&children=0")
         send_lark(msg)
-        send_email("🏕️ Yosemite 有房了！", f"<h2>有房！</h2><p>{msg}</p>")
+        send_email("🏕️ Yosemite 有房了！", f"<h2>有房！</h2><p>{msg.replace(chr(10), '<br>')}</p>")
     else:
         print("No rooms available at this time.")
 
