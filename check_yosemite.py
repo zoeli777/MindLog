@@ -7,59 +7,55 @@ from datetime import datetime
 # 监控配置
 CHECK_IN = "06/20/2026"
 CHECK_OUT = "06/21/2026"
-PROPERTY = "YOSE_LODGE"  # Yosemite Valley Lodge
 TARGET_EMAIL = "liqinrui1991@gmail.com"
 
-def check_availability():
-    url = "https://www.travelyosemite.com/api/availability"
-    params = {
-        "propertyCode": PROPERTY,
-        "arrivalDate": CHECK_IN,
-        "departureDate": CHECK_OUT,
-        "adults": 1,
-        "children": 0,
-        "rooms": 1,
-    }
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
-        "Accept": "application/json",
-    }
-    try:
-        resp = requests.get(url, params=params, headers=headers, timeout=15)
-        print(f"Status: {resp.status_code}")
-        print(f"Response: {resp.text[:500]}")
-        return resp
-    except Exception as e:
-        print(f"Request error: {e}")
-        return None
-
 def check_page_availability():
-    """直接抓取搜索结果页面判断是否有房"""
+    """抓取搜索结果页面，精准判断是否有房"""
     url = "https://www.travelyosemite.com/lodging/yosemite-valley-lodge/"
     params = {
-        "arrive": "06/20/2026",
-        "depart": "06/21/2026",
-        "adults": 1,
-        "children": 0,
+        "arrive": CHECK_IN,
+        "depart": CHECK_OUT,
+        "adults": "1",
+        "children": "0",
     }
     headers = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
     }
     try:
         resp = requests.get(url, params=params, headers=headers, timeout=20)
-        content = resp.text.lower()
+        content = resp.text
+        content_lower = content.lower()
         print(f"Page status: {resp.status_code}, length: {len(content)}")
 
-        # 判断有无空房的关键词
-        has_room = any(kw in content for kw in [
-            "add to cart", "book now", "available", "per night", "select room"
-        ])
-        no_room = any(kw in content for kw in [
-            "no rooms available", "no availability", "sold out"
-        ])
+        # 明确无房的标志（优先判断）
+        no_room_phrases = [
+            "no rooms available",
+            "no availability",
+            "sold out",
+            "there are no rooms",
+            "no lodging available",
+            "0 results",
+            "showing 0",
+        ]
+        for phrase in no_room_phrases:
+            if phrase in content_lower:
+                print(f"No room phrase found: '{phrase}'")
+                return False, content
 
-        print(f"Has room keywords: {has_room}, No room keywords: {no_room}")
-        return has_room and not no_room, resp.text
+        # 必须同时出现这些关键词才算真正有房
+        has_add_to_cart = "add to cart" in content_lower
+        has_price = "average/night" in content_lower or "per night" in content_lower
+        has_showing = "showing 1 to" in content_lower
+
+        print(f"add to cart: {has_add_to_cart}, price: {has_price}, showing results: {has_showing}")
+
+        if has_add_to_cart and has_price and has_showing:
+            return True, content
+        else:
+            return False, content
+
     except Exception as e:
         print(f"Error: {e}")
         return False, ""
@@ -87,7 +83,7 @@ def send_email(subject, body):
 
 def main():
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print(f"[{now}] Checking Yosemite Valley Lodge availability for {CHECK_IN} - {CHECK_OUT}")
+    print(f"[{now}] Checking Yosemite Valley Lodge for {CHECK_IN} - {CHECK_OUT}")
 
     available, page_content = check_page_availability()
 
@@ -99,7 +95,7 @@ def main():
         <p><strong>入住日期：</strong>{CHECK_IN}</p>
         <p><strong>退房日期：</strong>{CHECK_OUT}</p>
         <p><strong>检测时间：</strong>{now}</p>
-        <p><a href="https://www.travelyosemite.com/lodging/yosemite-valley-lodge/?arrive=06/20/2026&depart=06/21/2026&adults=1&children=0" 
+        <p><a href="https://www.travelyosemite.com/lodging/yosemite-valley-lodge/?arrive=06/20/2026&depart=06/21/2026&adults=1&children=0"
            style="background:#2d6a4f;color:white;padding:12px 24px;text-decoration:none;border-radius:6px;">
            👉 立即预订
         </a></p>
