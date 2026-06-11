@@ -24,4 +24,6 @@ jobs:
         env:
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          LARK_WEBHOOK: ${{ secrets.LARK_WEBHOOK }}
+
         run: python check_yosemite.py
