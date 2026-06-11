@@ -28,6 +28,13 @@ def check_availability():
         print(f"Total frames: {len(frames)}")
         for i, frame in enumerate(frames):
             print(f"Frame {i}: {frame.url}")
+            try:
+                content = frame.content().lower()
+                if any(kw in content for kw in ["add to cart", "per night", "average/night", "queen", "room"]):
+                    print(f"  *** INTERESTING CONTENT in Frame {i} ***")
+                    print(frame.content()[5000:8000])
+            except Exception as e:
+                print(f"  Frame error: {e}")
 
         # 在所有 frame 里搜索房间内容
         found = False
