@@ -1,8 +1,9 @@
-import requests
 import smtplib
 import os
+import requests
 from email.mime.text import MIMEText
 from datetime import datetime
+from playwright.sync_api import sync_playwright
 
 CHECK_IN = "06/18/2026"
 CHECK_OUT = "06/19/2026"
@@ -10,35 +11,38 @@ TARGET_EMAIL = "liqinrui1991@gmail.com"
 LARK_WEBHOOK = os.environ.get("LARK_WEBHOOK")
 
 def check_availability():
-    session = requests.Session()
-    session.headers.update({
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
-    })
-    search_url = "https://reservations.ahlsmsworld.com/Yosemite/Plan-Your-Trip/Accommodation-Search"
-    r1 = session.get(search_url, timeout=20)
-    print(f"Step 1 status: {r1.status_code}")
-    form_data = {
-        "Arrival": CHECK_IN,
-        "Departure": CHECK_OUT,
-        "Adults": "1",
-        "Children": "0",
-        "Rooms": "1",
-        "PropCode": "000000",
-    }
-    r2 = session.post(search_url, data=form_data, timeout=20)
-    print(f"Step 2 status: {r2.status_code}")
-    results_url = "https://reservations.ahlsmsworld.com/Yosemite/Plan-Your-Trip/Accommodation-Search/Results"
-    r3 = session.get(results_url, timeout=20)
-    print(f"Step 3 status: {r3.status_code}, length: {len(r3.text)}")
-    content = r3.text.lower()
-    print("=== SNIPPET (10000-13000) ===")
-    print(r3.text[10000:13000])
-    print("=== END ===")
-    has_room = "add to cart" in content or "addtocart" in content or "per night" in content
-    print(f"Has room: {has_room}")
-    return has_room
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        context = browser.new_context(
+            user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        )
+        page = context.new_page()
+
+        url = f"https://www.travelyosemite.com/lodging/yosemite-valley-lodge/?arrive={CHECK_IN}&depart={CHECK_OUT}&adults=1&children=0"
+        print(f"Loading: {url}")
+        page.goto(url, wait_until="domcontentloaded", timeout=60000)
+        page.wait_for_timeout(12000)
+
+        # 找到 iframe
+        frames = page.frames
+        print(f"Total frames: {len(frames)}")
+        for i, frame in enumerate(frames):
+            print(f"Frame {i}: {frame.url}")
+
+        # 在所有 frame 里搜索房间内容
+        found = False
+        for frame in frames:
+            try:
+                content = frame.content().lower()
+                if "add to cart" in content or "per night" in content or "average/night" in content:
+                    print(f"Found room content in frame: {frame.url}")
+                    found = True
+                    break
+            except Exception as e:
+                print(f"Frame error: {e}")
+
+        browser.close()
+        return found
 
 def send_lark(message):
     if not LARK_WEBHOOK:
@@ -71,7 +75,7 @@ def send_email(subject, body):
 
 def main():
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print(f"[{now}] Checking Yosemite Valley Lodge for {CHECK_IN} - {CHECK_OUT}")
+    print(f"[{now}] Checking for {CHECK_IN} - {CHECK_OUT}")
     available = check_availability()
     if available:
         print("ROOM AVAILABLE!")
@@ -82,7 +86,7 @@ def main():
         send_lark(msg)
         send_email("Yosemite 有房了！", f"<h2>有房！</h2><p>{msg}</p>")
     else:
-        print("No rooms available at this time.")
+        print("No rooms available.")
 
 if __name__ == "__main__":
     main()
