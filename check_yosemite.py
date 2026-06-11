@@ -19,10 +19,10 @@ def check_availability():
                f"?arrive={CHECK_IN}&depart={CHECK_OUT}&adults=1&children=0")
         
         print(f"Loading: {url}")
-        page.goto(url, wait_until="networkidle", timeout=30000)
+        page.goto(url, wait_until="domcontentloaded", timeout=60000)
         
         # 等待结果加载
-        page.wait_for_timeout(5000)
+        page.wait_for_timeout(8000)
         
         content = page.content().lower()
         print(f"Page loaded, length: {len(content)}")
