@@ -20,9 +20,15 @@ def check_availability():
         
         print(f"Loading: {url}")
         page.goto(url, wait_until="domcontentloaded", timeout=60000)
+        page.wait_for_timeout(15000)
+
+# 调试：打印页面中间部分
+content = page.content()
+print("=== SNIPPET (50000-53000) ===")
+print(content[50000:53000])
+print("=== END ===")
         
-        # 等待结果加载
-        page.wait_for_timeout(8000)
+    
         
         content = page.content().lower()
         print(f"Page loaded, length: {len(content)}")
